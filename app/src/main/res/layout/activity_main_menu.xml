@@ -12,6 +12,7 @@
         android:layout_height="wrap_content"
         android:text="Lost Dog"
         android:id="@+id/lostdogBtn"
+        android:onClick="lostdogs"
         android:layout_gravity="center_horizontal" />
 
     <Button

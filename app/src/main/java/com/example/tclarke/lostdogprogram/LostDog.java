@@ -4,6 +4,7 @@ import com.parse.ParseClassName;
 import com.parse.ParseFile;
 import com.parse.ParseGeoPoint;
 import com.parse.ParseObject;
+import com.parse.ParseQuery;
 
 import java.util.Date;
 
@@ -93,6 +94,10 @@ public class LostDog extends ParseObject {
         put("geoLocation",location);
     }
 
+
+    public static ParseQuery<LostDog> getQuery() {
+        return ParseQuery.getQuery(LostDog.class);
+    }
 }
 
 
