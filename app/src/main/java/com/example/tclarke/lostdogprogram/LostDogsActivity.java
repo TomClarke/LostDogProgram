@@ -1,6 +1,9 @@
 package com.example.tclarke.lostdogprogram;
 
+import android.app.Activity;
+import android.content.Context;
 import android.location.LocationListener;
+import android.location.LocationManager;
 import android.support.v4.app.FragmentActivity;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
@@ -9,147 +12,110 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
+import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.ListView;
 import android.location.Location;
 import android.widget.TextView;
 import android.widget.AdapterView.OnItemClickListener;
+
+import com.parse.FindCallback;
+import com.parse.ParseException;
+import com.parse.ParseImageView;
 import com.parse.ParseQuery;
 import com.parse.ParseQueryAdapter;
+import com.parse.ParseUser;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import android.os.Bundle;
+import android.support.v4.app.FragmentActivity;
 
 
-public class LostDogsActivity extends FragmentActivity implements LocationListener {
-    private Location savedLocation;
-    private Location currentLocation;
-    // Adapter for the Parse query
-    private ParseQueryAdapter<LostDog> postsQueryAdapter;
-    private String selectedPostObjectId;
-
-
-
-
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_lost_dogs);
-
-        // Set up a customized query
-        ParseQueryAdapter.QueryFactory<LostDog> factory =
-                new ParseQueryAdapter.QueryFactory<LostDog>() {
-                    public ParseQuery<LostDog> create() {
-                        Location myLoc = (currentLocation == null) ? savedLocation : currentLocation;
-                        ParseQuery<LostDog> query = LostDog.getQuery();
-                        query.include("user");
-                        query.include("petName");
-                        query.include("Geolocation");
-                        query.include("Photo");
-
-                        query.orderByDescending("createdAt");
-
-                        return query;
-                    }
-                };
-        // Set up the query adapter
-        postsQueryAdapter = new ParseQueryAdapter<LostDog>(this, factory) {
+    public class LostDogsActivity extends Activity implements OnItemClickListener {
+        private EditText mTaskInput;
+        private ListView mListView;
+        private LostDogAdapter mAdapter;
+        private LocationManager mLocationManager;
+        private final LocationListener mLocationListener = new LocationListener() {
             @Override
-            public View getItemView(LostDog post, View view, ViewGroup parent) {
-                if (view == null) {
-                    view = View.inflate(getContext(), R.layout.lostdog_post_item, null);
-                }
-                TextView contentView = (TextView) view.findViewById(R.id.content_view);
-                TextView usernameView = (TextView) view.findViewById(R.id.username_view);
-                contentView.setText(post.getName());
-                usernameView.setText(post.getDescription());
-                return view;
+            public void onLocationChanged(Location location) {
+                updateData();
+            }
+
+            @Override
+            public void onStatusChanged(String provider, int status, Bundle extras) {
+
+            }
+
+            @Override
+            public void onProviderEnabled(String provider) {
+
+            }
+
+            @Override
+            public void onProviderDisabled(String provider) {
+
             }
         };
-// Disable automatic loading when the adapter is attached to a view.
-        postsQueryAdapter.setAutoload(false);
 
-        // Disable pagination, we'll manage the query limit ourselves
-        postsQueryAdapter.setPaginationEnabled(false);
+        @Override
+        protected void onCreate(Bundle savedInstanceState) {
+            super.onCreate(savedInstanceState);
+            setContentView(R.layout.activity_lost_dogs);
 
-        // Attach the query adapter to the view
-        ListView postsListView = (ListView) findViewById(R.id.posts_listview);
-        postsListView.setAdapter(postsQueryAdapter);
-        doListQuery();
-         /* // Set up the handler for an item's selection
-        postsListView.setOnItemClickListener(new OnItemClickListener() {
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                final LostDog item = postsQueryAdapter.getItem(position);
-                selectedPostObjectId = item.getObjectId();
-            }
-            });
-    }
-             mapFragment.getMap().animateCamera(
-                        CameraUpdateFactory.newLatLng(new LatLng(item.getLocation().getLatitude(), item
-                                .getLocation().getLongitude())), new CancelableCallback() {
-                            public void onFinish() {
-                                Marker marker = mapMarkers.get(item.getObjectId());
-                                if (marker != null) {
-                                    marker.showInfoWindow();
-                                }
-                            }
+            mLocationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
 
-                            public void onCancel() {
-                            }
-                        });
-                Marker marker = mapMarkers.get(item.getObjectId());
-                if (marker != null) {
-                    marker.showInfoWindow();
+            mLocationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 5 * 60 * 1000,
+                    0, mLocationListener);
+            mAdapter = new LostDogAdapter(this, new ArrayList<LostDog>());
+
+          // mTaskInput = (EditText) findViewById(R.id.distance);
+            mListView = (ListView) findViewById(R.id.posts_listview);
+
+            mListView.setAdapter(mAdapter);
+
+            mListView.setOnItemClickListener(this);
+            updateData();
+        }
+
+        public void updateData(){
+            ParseQuery<LostDog> query = ParseQuery.getQuery(LostDog.class);
+            //query.whereEqualTo("user", ParseUser.getCurrentUser());
+            query.setCachePolicy(ParseQuery.CachePolicy.CACHE_THEN_NETWORK);
+            query.findInBackground(new FindCallback<LostDog>() {
+                @Override
+                public void done(List<LostDog> tasks, ParseException error) {
+                    if(tasks != null){
+                        mAdapter.clear();
+                        for (int i = 0; i < tasks.size(); i++) {
+                            mAdapter.add(tasks.get(i));
+                        }
+                    }
                 }
-            }
-        });
-*/
-
-    }
-
-    private void doListQuery() {
-        Location myLoc = (currentLocation == null) ? savedLocation : currentLocation;
-        if (myLoc != null) {
-            postsQueryAdapter.loadObjects();
-        }
-    }
-
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.menu_lost_dogs, menu);
-        return true;
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        int id = item.getItemId();
-
-        //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
-            return true;
+            });
         }
 
-        return super.onOptionsItemSelected(item);
+        @Override
+        public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+            LostDog dog = mAdapter.getItem(position);
+            TextView dogDescription = (TextView) view.findViewById(R.id.desctxt);
+            ParseImageView imgV = (ParseImageView) view.findViewById(R.id.dogView);
+
+        }
+
+        @Override
+        protected void onDestroy() {
+            super.onDestroy();
+
+        }
+
+        @Override
+        protected void onResume() {
+            super.onResume();
+
+        }
+
     }
-
-    @Override
-    public void onLocationChanged(Location location) {
-
-    }
-
-    @Override
-    public void onStatusChanged(String provider, int status, Bundle extras) {
-
-    }
-
-    @Override
-    public void onProviderEnabled(String provider) {
-
-    }
-
-    @Override
-    public void onProviderDisabled(String provider) {
-
-    }
-
-}

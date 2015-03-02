@@ -1,5 +1,7 @@
 package com.example.tclarke.lostdogprogram;
 
+import android.location.Geocoder;
+
 import com.parse.ParseClassName;
 import com.parse.ParseFile;
 import com.parse.ParseGeoPoint;
@@ -7,6 +9,7 @@ import com.parse.ParseObject;
 import com.parse.ParseQuery;
 
 import java.util.Date;
+import java.util.Locale;
 
 /**
  * Created by t.clarke on 06/02/2015.
@@ -23,6 +26,7 @@ public class LostDog extends ParseObject {
     ParseFile photo;
     ParseGeoPoint geoLocation;
     Date dateTime;
+
 
     public int getID() {
         return getInt("objectid");
@@ -85,14 +89,24 @@ public class LostDog extends ParseObject {
         put("Photo",dogimg);
     }
 
+    public String getLocation(){
+        return getParseGeoPoint("geoLocation").toString();
+    }
 
-    public ParseGeoPoint getLocation() {
+    public ParseGeoPoint getGeoLocation() {
         return getParseGeoPoint("geoLocation");
     }
 
     public void setLocation(ParseGeoPoint location) {
+
+       String current = getCurrentLocation();
         put("geoLocation",location);
     }
+
+public String getCurrentLocation(){
+
+return null;
+}
 
 
     public static ParseQuery<LostDog> getQuery() {

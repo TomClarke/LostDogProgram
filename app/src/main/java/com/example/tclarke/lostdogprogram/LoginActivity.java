@@ -13,7 +13,9 @@ import android.widget.Toast;
 
 import com.parse.LogInCallback;
 import com.parse.Parse;
+import com.parse.ParseACL;
 import com.parse.ParseException;
+import com.parse.ParseObject;
 import com.parse.ParseUser;
 import com.parse.SignUpCallback;
 
@@ -30,7 +32,16 @@ public class LoginActivity extends ActionBarActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
+        ParseObject.registerSubclass(LostDog.class);
         Parse.initialize(this, "NtFAPxv8LmzhKUQ16CgYi62twBNHypYLFfAcLQKc", "U7qhHqNJtJ8jAINa66ldiFCLAyk8BKQIQkwgTgij");
+        ParseUser.enableAutomaticUser();
+        ParseACL defaultACL = new ParseACL();
+
+        // If you would like all objects to be private by default, remove this
+        // line.
+        defaultACL.setPublicReadAccess(true);
+
+        ParseACL.setDefaultACL(defaultACL, true);
         if (ParseUser.getCurrentUser() != null) {
             // Start an intent for the logged in activity
            startActivity(new Intent(this, MainMenuActivity.class));
