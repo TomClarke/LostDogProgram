@@ -35,7 +35,7 @@
         android:layout_alignLeft="@+id/datetxt"
         android:layout_alignStart="@+id/datetxt" />
 
-    <com.parse.ParseImageView
+    <ImageView
         android:layout_width="100dp"
         android:layout_height="100dp"
         android:id="@+id/dogView"

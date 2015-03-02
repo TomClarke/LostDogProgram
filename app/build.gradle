@@ -25,4 +25,5 @@ dependencies {
     compile 'com.android.support:appcompat-v7:21.0.2'
     compile 'com.parse.bolts:bolts-android:1.+'
     compile 'com.android.support:support-v4:21.0.2'
+    compile files('src/androidTest/java/com/example/tclarke/lostdogprogram/picasso-2.5.0.jar')
 }
